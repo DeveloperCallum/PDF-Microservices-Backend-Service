@@ -46,7 +46,7 @@ function addDocumentToTable(client, documentUUID, documentBase64) {
     })
 }
 
-function addSelectionToTtable(client, selectionUUID, documentUUID, selectionBounds, pageWords = {}, settings = {}, isComplete = false) {
+function addSelectionTotable(client, documentUUID, selectionUUID, selectionBounds = {}, pageWords = {}, settings = {}, isComplete = false) {
     const insertToDocumentTable = `INSERT INTO job_store.public.selection_table ("Selection_UUID", "Document_UUID", "Selection_bounds", "Page_Words", "Settings", "isCompleted") values ($1, $2, $3, $4, $5, $6)`;
 
     return new Promise((resolve, reject) => {
@@ -70,8 +70,34 @@ function runSQLFile(client, filePath) {
     });
 }
 
+function getDatabaseFromUUID(client, uuid){
+        const insertToDocumentTable = `SELECT * FROM job_store.public.document_table WHERE "Document_UUID" = $1`;
+
+        return new Promise((resolve, reject) => {
+            client.query(insertToDocumentTable, [uuid])
+                .then((res) => {
+                    resolve(res);
+                })
+                .catch(reject);
+        })
+}
+
+function getSelectionFromUUID(client, docUUID, selUUID){
+        const insertToDocumentTable = `SELECT * FROM job_store.public.selection_table WHERE "Document_UUID" = $1 AND "Selection_UUID" = $2`;
+
+        return new Promise((resolve, reject) => {
+            client.query(insertToDocumentTable, [docUUID, selUUID])
+                .then((res) => {
+                    resolve(res);
+                })
+                .catch(reject);
+        })
+}
+
 module.exports = {
     setupPostgreSQL,
     addDocumentToTable,
-    addSelectionToTtable
+    addSelectionTotable,
+    getDatabaseFromUUID,
+    getSelectionFromUUID
 };
