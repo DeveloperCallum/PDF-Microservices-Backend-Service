@@ -99,21 +99,25 @@ app.put('/api/pdf/upload', async (req, res) => {
 //202, 500
 app.post('/api/pdf/extract', async (req, res) => {
 	console.log("/api/pdf/extract");
-	
+
 	let managementURL;
 	await getServiceUrl("WORKERMANAGEMENTSERVICE").then((url) => {
 		managementURL = url;
 	});
 
 	let jsonData = req.body;
-	req.body.selectionUUID = uuidv4();
+	req.body.selectionUUID = req.body.selectionUUID ||uuidv4();
+
+
 	req.body.callbackURL = `${jsonData.documentUUID}/${req.body.selectionUUID}`;
 	req.body.callbackService = serviceName;
 
+	console.log(jsonData)
+
+	let client = await pool.connect();
 	await axios.post(`${managementURL}/management/pdf/extract`, jsonData, { headers: req.headers }).then(async (proxyResponse) => {
-		let client = await pool.connect();
+
 		await addSelectionTotable(client, jsonData.documentUUID, proxyResponse.data.selectionUUID, jsonData.selection);
-		await client.release();
 
 		res.statusCode = proxyResponse.status
 		res.send(proxyResponse.data);
@@ -121,6 +125,8 @@ app.post('/api/pdf/extract', async (req, res) => {
 		console.log("ERROR!")
 		res.statusCode = 500
 		res.send(err);
+	}).finally(() => {
+		client.release();
 	})
 });
 

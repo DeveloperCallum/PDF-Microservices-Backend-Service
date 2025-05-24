@@ -3,21 +3,21 @@ const Eureka = require('eureka-js-client').Eureka;
 // Configure Eureka client
 const client = new Eureka({
     instance: {
-        app: process.env.EUREKA_APP_NAME || "express",
-        hostName: `${process.env.HOSTNAME}:express`,
+        app: process.env.EUREKA_APP_NAME || "expressjs",
+        hostName: `${process.env.HOSTNAME}`,
         ipAddr: "127.0.0.1",
         port: {
             '$': process.env.EXPRESS_PORT,
             '@enabled': 'true',
         },
-        vipAddress: 'nodejs-service',
+        vipAddress: process.env.EUREKA_APP_NAME || "expressjs",
         dataCenterInfo: {
             '@class': 'com.netflix.appinfo.InstanceInfo$DefaultDataCenterInfo',
             name: 'MyOwn',
         },
         leaseInfo: {
             renewalIntervalInSecs: 30, // Send heartbeat every 30 seconds
-            durationInSecs: 90, // Expire instance if no heartbeat in 90 seconds
+            durationInSecs: 60,
         },
     },
     eureka: {
