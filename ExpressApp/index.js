@@ -51,13 +51,21 @@ app.get('/api/pdf/status/:documentUUID/', async (req, res) => {
 		})
 });
 
-app.put('/callback/:documentUUID/:selectionUUID', async (req, res) => {
+//202
+app.post('/webhook/pdf/extraction/:documentUUID/:selectionUUID', async (req, res) => {
 	console.log('/callback/:documentUUID/');
 	const userId = req.params.documentUUID;
 	const selectionId = req.params.selectionUUID;
 
 	console.log("CALLBACK WORKING!");
-	res.send("YES");
+	console.log("req.body");
+	console.log(req.body);
+
+		console.log("req.body.selection");
+	console.log(req.body.selection.lines);
+
+	res.statusCode = 202
+	res.send()
 });
 
 app.get('/api/pdf/status/:documentUUID/:selectionUUID', async (req, res) => {
@@ -97,6 +105,7 @@ app.put('/api/pdf/upload', async (req, res) => {
 });
 
 //202, 500
+const callbackURL = "/webhook/pdf/extraction/";
 app.post('/api/pdf/extract', async (req, res) => {
 	console.log("/api/pdf/extract");
 
@@ -108,11 +117,8 @@ app.post('/api/pdf/extract', async (req, res) => {
 	let jsonData = req.body;
 	req.body.selectionUUID = req.body.selectionUUID ||uuidv4();
 
-
-	req.body.callbackURL = `${jsonData.documentUUID}/${req.body.selectionUUID}`;
+	req.body.callbackURL = callbackURL + `${jsonData.documentUUID}/${req.body.selectionUUID}`;
 	req.body.callbackService = serviceName;
-
-	console.log(jsonData)
 
 	let client = await pool.connect();
 	await axios.post(`${managementURL}/management/pdf/extract`, jsonData, { headers: req.headers }).then(async (proxyResponse) => {
