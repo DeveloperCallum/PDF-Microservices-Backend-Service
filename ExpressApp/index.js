@@ -61,8 +61,8 @@ app.post('/webhook/pdf/extraction/:documentUUID/:selectionUUID', async (req, res
 	console.log("req.body");
 	console.log(req.body);
 
-		console.log("req.body.selection");
-	console.log(req.body.selection.lines);
+	console.log("req.body.selection");
+	console.log(req.body.selection["1"][0].lines);
 
 	res.statusCode = 202
 	res.send()
