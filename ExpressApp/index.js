@@ -1,10 +1,11 @@
 //index.js
 const { Pool, Client } = require('pg');
 const express = require('express');
-const { setupPostgreSQL, addSelectionTotable, getDatabaseFromUUID, getSelectionFromUUID } = require('./database');
+const { setupPostgreSQL, addSelectionTotable, addDocumentToTable, getDocumentFromDatabase, getSelectionFromUUID, updateWords, updateIsComplete, getisCompletedSelectionFromUUID } = require('./database');
 const { configureEukera, getServiceUrl } = require('./eukeka')
 const http = require("http");
 const axios = require('axios');
+const { logErrors, errorHandler } = require('./errorhandle');
 const uuidv4 = require('uuid').v4
 
 const PORT = process.env.PORT || 3000;
@@ -12,8 +13,8 @@ const HOST = process.env.HOST || '0.0.0.0';
 const serviceName = process.env.EUREKA_APP_NAME;
 
 const handleError = (e, res) => {
-	res.statusCode = 404
-	return res.send(JSON.stringify(e));
+	res.statusCode = 500;
+	res.json(e);
 }
 
 const pool = new Pool({
@@ -30,55 +31,20 @@ const pool = new Pool({
 const app = express();
 app.use(express.json({ limit: '20mb' })); // Increase JSON body size limit
 
-app.get('/hi', (req, res) => {
-	console.log("/hi")
-	res.send("hello")
-})
-
-//200, 404
-app.get('/api/pdf/status/:documentUUID/', async (req, res) => {
-	console.log('/api/pdf/status/:documentUUID/');
-	const userId = req.params.documentUUID;
-
-	const client = await pool.connect();
-	getDatabaseFromUUID(client, userId)
-		.then(() => {
-			res.send("OK!")
-		})
-		.catch((e) => handleError(e, res))
-		.finally(() => {
-			client.release();
-		})
-});
-
-//202
+//200
 app.post('/webhook/pdf/extraction/:documentUUID/:selectionUUID', async (req, res) => {
 	console.log('/callback/:documentUUID/');
-	const userId = req.params.documentUUID;
-	const selectionId = req.params.selectionUUID;
+	const documentUUID = req.params.documentUUID;
+	const selectionUUID = req.params.selectionUUID;
 
 	console.log("CALLBACK WORKING!");
-	console.log("req.body");
-	console.log(req.body);
 
-	console.log("req.body.selection");
-	console.log(req.body.selection["1"][0].lines);
-
-	res.statusCode = 202
-	res.send()
-});
-
-app.get('/api/pdf/status/:documentUUID/:selectionUUID', async (req, res) => {
-	console.log("/api/pdf/status/:documentUUID/:selectionUUID");
-	const userId = req.params.documentUUID;
-	const selectionId = req.params.selectionUUID;
 	const client = await pool.connect();
-	getSelectionFromUUID(client, userId, selectionId)
-		.then((response) => {
-			const resp = {
-				isCompleted: `${response.rows[0].isCompleted}`
-			}
-			res.send(JSON.stringify(resp))
+	updateWords(client, documentUUID, selectionUUID, req.body)
+		.then(updateIsComplete(client, documentUUID, selectionUUID, true))
+		.then(() => {
+			res.statusCode = 202
+			res.send("OK!");
 		})
 		.catch((e) => handleError(e, res))
 		.finally(() => {
@@ -87,16 +53,74 @@ app.get('/api/pdf/status/:documentUUID/:selectionUUID', async (req, res) => {
 });
 
 // 201, 500
-app.put('/api/pdf/upload', async (req, res) => {
+app.post('/api/pdf/upload', async (req, res) => {
 	console.log("/api/pdf/upload");
-	const client = await pool.connect();
-	const uploadUUID = uuidv4();
-	console.log(JSON.stringify(req.body))
+	let jsonData = req.body;
 
-	addSelectionTotable(client, uploadUUID, req.body.pdfBase64)
+	if (!jsonData.pdfBase64) {
+		throw new Error("Document was not provided!")
+	}
+
+	const uploadUUID = uuidv4();
+	const client = await pool.connect();
+	await addDocumentToTable(client, uploadUUID, req.body.pdfBase64)
 		.then(() => {
-			res.status = axios.HttpStatusCode.Created;
-			res.send(`{ "documentUUID: ${uploadUUID} }`);
+			res.statusCode = 201;
+			return res.send(`{ "documentUUID: ${uploadUUID} }`);
+		})
+		.catch((e) => handleError(e, res))
+		.finally(() => {
+			client.release();
+		})
+});
+
+// 201, 500
+app.get('/api/pdf/:documentUUID', async (req, res) => {
+	const documentUUID = req.params.documentUUID;
+
+	const client = await pool.connect();
+	await getDocumentFromDatabase(client, documentUUID).then((query) => { res.json(query) }).finally(() => {
+		client.release();
+	})
+});
+
+app.get('/api/pdf/status/:documentUUID/:selectionUUID', async (req, res) => {
+	console.log("/api/pdf/status/:documentUUID/:selectionUUID");
+	const userId = req.params.documentUUID;
+	const selectionId = req.params.selectionUUID;
+
+	const client = await pool.connect();
+	getisCompletedSelectionFromUUID(client, userId, selectionId)
+		.then((response) => {
+			if (response.rows.length == 0) {
+				res.statusCode = 404;
+				res.send();
+				return;
+			}
+
+			res.json(response.rows[0]);
+		})
+		.catch((e) => handleError(e, res))
+		.finally(() => {
+			client.release();
+		})
+});
+
+app.get('/api/pdf/:documentUUID/:selectionUUID', async (req, res) => {
+	console.log("/api/pdf/:documentUUID/:selectionUUID");
+	const userId = req.params.documentUUID;
+	const selectionId = req.params.selectionUUID;
+
+	const client = await pool.connect();
+	getSelectionFromUUID(client, userId, selectionId)
+		.then((response) => {
+			if (response.rows.length == 0) {
+				res.statusCode = 404;
+				res.send();
+				return;
+			}
+
+			res.json(response.rows[0]);
 		})
 		.catch((e) => handleError(e, res))
 		.finally(() => {
@@ -108,14 +132,18 @@ app.put('/api/pdf/upload', async (req, res) => {
 const callbackURL = "/webhook/pdf/extraction/";
 app.post('/api/pdf/extract', async (req, res) => {
 	console.log("/api/pdf/extract");
+	let jsonData = req.body;
+
+	if (!jsonData.documentUUID) {
+		throw new Error("documentUUID is not stated");
+	}
 
 	let managementURL;
 	await getServiceUrl("WORKERMANAGEMENTSERVICE").then((url) => {
 		managementURL = url;
 	});
 
-	let jsonData = req.body;
-	req.body.selectionUUID = req.body.selectionUUID ||uuidv4();
+	req.body.selectionUUID = req.body.selectionUUID || uuidv4();
 
 	req.body.callbackURL = callbackURL + `${jsonData.documentUUID}/${req.body.selectionUUID}`;
 	req.body.callbackService = serviceName;
@@ -154,5 +182,8 @@ const gracefulShutdown = () => {
 
 // Listen for app termination signals
 app.on('close', gracefulShutdown);
+
+app.use(logErrors);
+app.use(errorHandler);
 
 //todo: callback URL, status checks! 

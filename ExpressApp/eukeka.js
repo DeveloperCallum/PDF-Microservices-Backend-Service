@@ -61,7 +61,8 @@ function getServiceUrl(serviceName) {
                 return reject(new Error('No instances available'));
             }
 
-            const instance = instances[0];
+            console.log(instances.length)
+            const instance = instances[Math.ceil(Math.random() * instances.length) - 1];
             const serviceUrl = `http://${instance.hostName}:${instance.port.$}`;
             resolve(serviceUrl);
         } catch (error) {
@@ -69,7 +70,6 @@ function getServiceUrl(serviceName) {
         }
     });
 };
-
 
 module.exports = {
     configureEukera,
