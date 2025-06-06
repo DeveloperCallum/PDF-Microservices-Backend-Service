@@ -33,12 +33,12 @@ services:
       - POSTGRES_HOST=postgres
       - POSTGRES_PORT=5432
       - POSTGRES_DATABASE=job_store
-      - EXPRESS_PORT=3000
+      - EXPRESS_PORT=3200
       - EUREKA_APP_NAME=EXPRESSJS
       - EUREKA_HOST=job-service-eureka-1
       - EUREKA_PORT=8761
     ports:
-      - "0.0.0.0:3000:3000"
+      - "0.0.0.0:3200:3200"
     depends_on:
       postgres:
         condition: service_healthy

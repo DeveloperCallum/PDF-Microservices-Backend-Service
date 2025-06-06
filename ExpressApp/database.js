@@ -24,16 +24,19 @@ function ensureDatabaseExists(dbName, client) {
 }
 
 async function getDocumentFromDatabase(client, documentUUID) {
-    const res = await client.query(`SELECT 
-        d."Document_UUID", 
-        "Document_Base64",
-        json_agg(json_build_object(
-            'Selection_UUID', s."Selection_UUID",
-            'isCompleted', s."isCompleted")) AS selection_data
-        FROM selection_table s
-            JOIN document_table d ON s."Document_UUID" = d."Document_UUID"
-        WHERE d."Document_UUID" = $1
-        GROUP BY d."Document_UUID";
+    const res = await client.query(`SELECT
+    d."Document_UUID",
+    "Document_Base64",
+    COALESCE(json_agg(
+                json_build_object(
+                        'Selection_UUID', s."Selection_UUID",
+                        'isCompleted', s."isCompleted"
+                    )
+                ) FILTER (WHERE s."Selection_UUID" IS NOT NULL),'[]'::json) AS selection_data
+    FROM selection_table s
+            RIGHT JOIN document_table d ON s."Document_UUID" = d."Document_UUID"
+    WHERE d."Document_UUID" = $1
+    GROUP BY d."Document_UUID";
 `, [documentUUID]);
 
     if (res.rowCount === 0) {
