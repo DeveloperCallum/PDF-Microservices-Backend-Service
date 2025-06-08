@@ -1,4 +1,4 @@
-module.exports.errorHandler = (err, req, res, next) => {
+export function errorHandler(err: any, req: any, res: any, next: any) {
   if (res.headersSent) {
     return next(err);
   }
@@ -6,7 +6,7 @@ module.exports.errorHandler = (err, req, res, next) => {
   res.json({ error: err.message });
 }
 
-module.exports.logErrors = (err, req, res, next) => {
+export function logErrors(err: any, req: any, res: any, next: any) {
   console.log(err.stack);
   next(err);
 }

@@ -1,6 +1,6 @@
-const fs = require("fs");
+import fs from 'fs';
 
-function setupPostgreSQL(client, database) {
+export function setupPostgreSQL(client: any, database: any) {
     console.log('Connected to PostgreSQL database');
 
     ensureDatabaseExists(database, client)
@@ -10,8 +10,8 @@ function setupPostgreSQL(client, database) {
 }
 
 //Can never fail because Pool connect to database has been set.
-function ensureDatabaseExists(dbName, client) {
-    return new Promise(async (resolve, reject) => {
+export function ensureDatabaseExists(dbName: any, client: any) {
+    return new Promise<void>(async (resolve, reject) => {
         const res = await client.query(`SELECT 1 FROM pg_database WHERE datname = $1`, [dbName]);
         if (res.rowCount === 0) {
             console.log(`Database ${dbName} does not exist.`);
@@ -23,7 +23,7 @@ function ensureDatabaseExists(dbName, client) {
     });
 }
 
-async function getDocumentFromDatabase(client, documentUUID) {
+export async function getDocumentFromDatabase(client: any, documentUUID: any) {
     const res = await client.query(`SELECT
     d."Document_UUID" as "documentUUID",
     "Document_Base64" as "pdfBase64",
@@ -45,16 +45,16 @@ async function getDocumentFromDatabase(client, documentUUID) {
     return res.rows[0];
 }
 
-async function updateWords(client, documentUUID, selectionUUID, pageWords) {
+export async function updateWords(client: any, documentUUID: any, selectionUUID: any, pageWords: any) {
     return client.query(`update selection_table set "Page_Words" = $1 where "Document_UUID" = $2 and "Selection_UUID" = $3`, [pageWords, documentUUID, selectionUUID]);
 }
 
-async function updateIsComplete(client, documentUUID, selectionUUID, isComplete = false) {
+export async function updateIsComplete(client: any, documentUUID: any, selectionUUID: any, isComplete = false) {
     return client.query(`update selection_table set "isCompleted" = $1 where "Document_UUID" = $2 and "Selection_UUID" = $3`, [isComplete, documentUUID, selectionUUID]);
 }
 
-function ensureTableExists(tableName, filePath, client) {
-    return new Promise(async (resolve, reject) => {
+export function ensureTableExists(tableName: any, filePath: any, client: any) {
+    return new Promise<void>(async (resolve, reject) => {
         try {
             console.log(`Creating table if not exists ${tableName}`);
             await runSQLFile(client, filePath);
@@ -65,11 +65,11 @@ function ensureTableExists(tableName, filePath, client) {
     });
 }
 
-async function addDocumentToTable(client, documentUUID, documentBase64) {
+export async function addDocumentToTable(client: any, documentUUID: any, documentBase64: any) {
     return client.query("INSERT INTO public.document_table VALUES ($1, $2)", [documentUUID, documentBase64]);
 }
 
-function addSelectionTotable(client, documentUUID, selectionUUID, selectionBounds = {}, pageWords = {}, settings = {}, isComplete = false) {
+export function addSelectionTotable(client: any, documentUUID: any, selectionUUID: any, selectionBounds = {}, pageWords = {}, settings = {}, isComplete = false) {
     const insertToDocumentTable = `INSERT INTO job_store.public.selection_table ("Selection_UUID", "Document_UUID", "Selection_bounds", "Page_Words", "Settings", "isCompleted") values ($1, $2, $3, $4, $5, $6)`;
 
     return new Promise((resolve, reject) => {
@@ -79,9 +79,9 @@ function addSelectionTotable(client, documentUUID, selectionUUID, selectionBound
     });
 }
 
-function runSQLFile(client, filePath) {
+export function runSQLFile(client: any, filePath: any) {
     return new Promise((resolve, reject) => {
-        fs.readFile(filePath, 'utf8', (err, sql) => {
+        fs.readFile(filePath, 'utf8', (err: any, sql: any) => {
             if (err) {
                 return reject(err);
             }
@@ -93,28 +93,36 @@ function runSQLFile(client, filePath) {
     });
 }
 
-function getSelectionFromUUID(client, docUUID, selUUID) {
+//Each should be unquie.
+export function getSelectionFromUUID(client: any, docUUID: any, selUUID: any) {
     const insertToDocumentTable = `SELECT * FROM job_store.public.selection_table WHERE "Document_UUID" = $1 AND "Selection_UUID" = $2`;
 
     return new Promise((resolve, reject) => {
         client.query(insertToDocumentTable, [docUUID, selUUID])
-            .then((res) => {
-                resolve(res);
+            .then((res: any) => {
+                if (res.rows.length == 0) {
+                    throw new Error("No results!")
+                }
+
+                resolve(res.rows[0]);
             })
             .catch(reject);
     })
 }
 
-function getisCompletedSelectionFromUUID(client, docUUID, selUUID) {
+export function getisCompletedSelectionFromUUID(client: any, docUUID: any, selUUID: any) {
     const insertToDocumentTable = `SELECT "Selection_UUID", "Document_UUID", "isCompleted" FROM job_store.public.selection_table WHERE "Document_UUID" = $1 AND "Selection_UUID" = $2`;
 
     return new Promise((resolve, reject) => {
         client.query(insertToDocumentTable, [docUUID, selUUID])
-            .then((res) => {
+            .then((res: any) => {
                 resolve(res);
             })
             .catch(reject);
     })
+<<<<<<< HEAD:ExpressApp/src/database.ts
+}
+=======
 }
 
 module.exports = {
@@ -127,3 +135,4 @@ module.exports = {
     updateIsComplete,
     getisCompletedSelectionFromUUID
 };
+>>>>>>> 9ae718d26bf256752c74fd030db938ea998cbbab:ExpressApp/database.js

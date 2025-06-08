@@ -1,4 +1,4 @@
-const Eureka = require('eureka-js-client').Eureka;
+const { Eureka }: any = require('eureka-js-client');
 
 // Configure Eureka client
 const client = new Eureka({
@@ -27,10 +27,10 @@ const client = new Eureka({
     }
 });
 
-function configureEukera() {
-    return new Promise((resolve, reject) => {
+export function configureEukera() {
+    return new Promise<void>((resolve, reject) => {
         // Start Eureka client
-        client.start(error => {
+        client.start((error: any) => {
             if (error) {
                 console.log('Eureka client started with error:', error);
                 reject(error)
@@ -50,9 +50,7 @@ function configureEukera() {
     })
 }
 
-const axios = require('axios');
-
-function getServiceUrl(serviceName) {
+export function getServiceUrl(serviceName : any) {
     return new Promise((resolve, reject) => {
         try {
             let instances = client.getInstancesByAppId(serviceName);
@@ -70,8 +68,3 @@ function getServiceUrl(serviceName) {
         }
     });
 };
-
-module.exports = {
-    configureEukera,
-    getServiceUrl
-}

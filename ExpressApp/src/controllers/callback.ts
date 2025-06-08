@@ -1,8 +1,9 @@
-const { updateWords, updateIsComplete } = require("../database");
-const { getPool } = require("../dbPool");
-const { handleError } = require("../util");
+import { Request, Response } from "express";
+import { updateWords, updateIsComplete } from "../database";
+import { getPool } from "../dbPool";
+import { handleError } from "../util";
 
-module.exports.extractionCallback = async (req, res) => {
+export async function extractionCallback(req : Request, res : Response){
 	console.log('/webhook/pdf/extraction/:documentUUID/:selectionUUID');
 	const documentUUID = req.params.documentUUID;
 	const selectionUUID = req.params.selectionUUID;
@@ -11,7 +12,7 @@ module.exports.extractionCallback = async (req, res) => {
 
 	const client = await getPool().connect();
 	updateWords(client, documentUUID, selectionUUID, req.body)
-		.then(updateIsComplete(client, documentUUID, selectionUUID, true))
+		.then(await updateIsComplete(client, documentUUID, selectionUUID, true))
 		.then(() => {
 			res.statusCode = 202
 			res.send("OK!");
@@ -22,7 +23,7 @@ module.exports.extractionCallback = async (req, res) => {
 		})
 };
 
-module.exports.imageCallback = async (req, res) => {
+export async function imageCallback(req : Request, res: Response) {
 	console.log('/webhook/pdf/image/:documentUUID/');
 	const documentUUID = req.params.documentUUID;
 

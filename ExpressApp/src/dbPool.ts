@@ -1,10 +1,10 @@
-const { Pool } = require('pg');
+import { Pool } from 'pg';
 
 const pool = new Pool({
     user: process.env.POSTGRES_USERNAME,
     password: process.env.POSTGRES_PASSWORD,
     host: process.env.POSTGRES_HOST || 'postgres',
-    port: process.env.POSTGRES_PORT || '5432',
+    port: Number(process.env.POSTGRES_PORT) || 5432,
     database: process.env.POSTGRES_DATABASE || 'job_store',
     max: 20,
     idleTimeoutMillis: 30000,
@@ -12,4 +12,6 @@ const pool = new Pool({
 });
 
 //TODO: Remove this, i hate this.
-module.exports.getPool = () => { return pool}; 
+export function getPool() : Pool{ 
+    return pool
+}; 

@@ -1,12 +1,12 @@
-const { addSelectionTotable } = require("../database");
-const { getPool } = require("../dbPool");
-const { getServiceUrl } = require("../eukeka");
-const { serviceName } = require("../util");
-const axios = require('axios');
-const uuidv4 = require('uuid').v4
+import { addSelectionTotable }from "../database";
+import { getPool } from "../dbPool";
+import { getServiceUrl } from "../eukeka";
+import { getServiceName } from "../util";
+import axios from "axios";
+import { v4 } from "uuid"; 
 
 const callbackURL = "/webhook/pdf/extraction/";
-module.exports.extract = async (req, res) => {
+export async function extract(req: any, res: any) {
 	console.log("/api/pdf/extract");
 	let jsonData = req.body;
 
@@ -15,23 +15,23 @@ module.exports.extract = async (req, res) => {
 	}
 
 	let managementURL;
-	await getServiceUrl("WORKERMANAGEMENTSERVICE").then((url) => {
+	await getServiceUrl("WORKERMANAGEMENTSERVICE").then((url: any) => {
 		managementURL = url;
 	});
 
-	req.body.selectionUUID = req.body.selectionUUID || uuidv4();
+	req.body.selectionUUID = req.body.selectionUUID || v4();
 
 	req.body.callbackURL = callbackURL + `${jsonData.documentUUID}/${req.body.selectionUUID}`;
-	req.body.callbackService = serviceName;
+	req.body.callbackService = getServiceName();
 
 	let client = await getPool().connect();
-	await axios.post(`${managementURL}/management/pdf/extract`, jsonData, { headers: req.headers }).then(async (proxyResponse) => {
+	await axios.post(`${managementURL}/management/pdf/extract`, jsonData, { headers: req.headers }).then(async (proxyResponse : any) => {
 
 		await addSelectionTotable(client, jsonData.documentUUID, proxyResponse.data.selectionUUID, jsonData.selection);
 
 		res.statusCode = proxyResponse.status
 		res.send(proxyResponse.data);
-	}).catch((err) => {
+	}).catch((err: any) => {
 		console.log("ERROR!")
 		res.statusCode = 500
 		res.send(err);

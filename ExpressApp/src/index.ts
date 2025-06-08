@@ -1,14 +1,14 @@
 //index.js
-const express = require('express');
-const { setupPostgreSQL } = require('./database');
-const { configureEukera } = require('./eukeka')
-const { logErrors, errorHandler } = require('./errorhandle');
-const { upload } = require('./controllers/upload');
-const { extract } = require('./controllers/management');
-const { status } = require('./controllers/status');
-const { imageCallback, extractionCallback } = require('./controllers/callback');
-const { getDocument, getSelection } = require('./controllers/document');
-const { getPool } = require('./dbPool');
+import express from 'express';
+import { setupPostgreSQL } from './database';
+import { configureEukera } from './eukeka';
+import { logErrors, errorHandler } from './errorhandle';
+import { upload } from './controllers/upload';
+import { extract } from './controllers/management';
+import { status } from './controllers/status';
+import { imageCallback, extractionCallback } from './controllers/callback';
+import { getDocument, getSelection } from './controllers/document';
+import { getPool } from './dbPool';
 
 const app = express();
 app.use(express.json({ limit: '20mb' })); // Increase JSON body size limit
@@ -30,7 +30,7 @@ app.listen(process.env.EXPRESS_PORT, async () => {
 
 app.on('close', () => {
 	console.log('Closing PostgreSQL pool...');
-	getPool.end(() => {
+	getPool().end(() => {
 		console.log('PostgreSQL pool closed.');
 		process.exit(0);
 	});

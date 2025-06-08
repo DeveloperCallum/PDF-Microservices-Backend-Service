@@ -1,9 +1,9 @@
-const { addDocumentToTable } = require('../database');
-const { getPool } = require('../dbPool');
-const { handleError } = require('../util');
-const uuidv4 = require('uuid').v4
+import { addDocumentToTable } from '../database';
+import { getPool } from '../dbPool';
+import { handleError } from '../util';
+import {v4} from 'uuid';
 
-module.exports.upload = async (req, res) => {
+ export async function upload(req: any, res: any) {
 	console.log("/api/pdf/upload");
 	let jsonData = req.body;
 
@@ -11,14 +11,14 @@ module.exports.upload = async (req, res) => {
 		throw new Error("Document was not provided!")
 	}
 
-	const uploadUUID = uuidv4();
+	const uploadUUID = v4();
 	const client = await getPool().connect();
 	await addDocumentToTable(client, uploadUUID, req.body.pdfBase64)
 		.then(() => {
 			res.statusCode = 201;
 			return res.send(`{ "documentUUID: ${uploadUUID} }`);
 		})
-		.catch((e) => handleError(e, res))
+		.catch((e: any) => handleError(e, res))
 		.finally(() => {
 			client.release();
 		})
