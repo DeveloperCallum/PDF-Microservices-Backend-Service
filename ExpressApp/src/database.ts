@@ -120,4 +120,19 @@ export function getisCompletedSelectionFromUUID(client: any, docUUID: any, selUU
             })
             .catch(reject);
     })
+<<<<<<< HEAD:ExpressApp/src/database.ts
 }
+=======
+}
+
+module.exports = {
+    setupPostgreSQL,
+    addDocumentToTable,
+    addSelectionTotable,
+    getSelectionFromUUID,
+    getDocumentFromDatabase,
+    updateWords,
+    updateIsComplete,
+    getisCompletedSelectionFromUUID
+};
+>>>>>>> 9ae718d26bf256752c74fd030db938ea998cbbab:ExpressApp/database.js
