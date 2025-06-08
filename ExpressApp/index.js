@@ -79,7 +79,13 @@ app.get('/api/pdf/:documentUUID', async (req, res) => {
 	const documentUUID = req.params.documentUUID;
 
 	const client = await pool.connect();
-	await getDocumentFromDatabase(client, documentUUID).then((query) => { res.json(query) }).finally(() => {
+	await getDocumentFromDatabase(client, documentUUID)
+	.then((query) => { res.json(query) })
+	.catch((e) => {
+		res.statusCode = 404;
+		res.json(e);
+	})
+	.finally(() => {
 		client.release();
 	})
 });
