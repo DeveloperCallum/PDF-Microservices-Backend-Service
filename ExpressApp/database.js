@@ -117,7 +117,6 @@ function getisCompletedSelectionFromUUID(client, docUUID, selUUID) {
     })
 }
 
-
 module.exports = {
     setupPostgreSQL,
     addDocumentToTable,
