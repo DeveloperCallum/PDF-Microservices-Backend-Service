@@ -27,6 +27,7 @@ services:
     networks:
       - backend-network
       - pdf_microservice_arch
+      - backend-logging-connector
     environment:
       - POSTGRES_USERNAME=user
       - POSTGRES_PASSWORD=password
@@ -47,7 +48,9 @@ volumes:
     driver: local
 
 networks:
-  pdf_microservice_arch:
-    external: true
   backend-network:
     external: false
+  pdf_microservice_arch:
+    external: true
+  backend-logging-connector:
+    external: true

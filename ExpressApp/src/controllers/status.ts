@@ -3,9 +3,10 @@ import { Request, Response } from "express";
 import { getisCompletedSelectionFromUUID } from "../database";
 import { getPool } from "../dbPool";
 import { handleError } from "../util";
+import logger, { getBaseLoggerparams } from "../logger";
 
 export async function status(req: Request, res: Response) {
-	console.log("/api/pdf/status/:documentUUID/:selectionUUID");
+	const params: any = getBaseLoggerparams(req, res);
 	const userId = req.params.documentUUID;
 	const selectionId = req.params.selectionUUID;
 
@@ -20,7 +21,10 @@ export async function status(req: Request, res: Response) {
 
 			res.json(response.rows[0]);
 		})
-		.catch((e: any) => handleError(e, res))
+		.catch((e: any) => {
+			logger.error(e.message, Object.assign(params, { error: e }))
+			handleError(e, res)
+		})
 		.finally(() => {
 			client.release();
 		})

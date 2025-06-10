@@ -2,13 +2,13 @@ import { Request, Response } from "express";
 import { updateWords, updateIsComplete } from "../database";
 import { getPool } from "../dbPool";
 import { handleError } from "../util";
+import logger, { getBaseLoggerparams } from "../logger";
 
-export async function extractionCallback(req : Request, res : Response){
-	console.log('/webhook/pdf/extraction/:documentUUID/:selectionUUID');
+export async function extractionCallback(req: Request, res: Response) {
 	const documentUUID = req.params.documentUUID;
 	const selectionUUID = req.params.selectionUUID;
-
-	console.log("CALLBACK WORKING!");
+	const params: any = getBaseLoggerparams(req, res);
+	logger.info(Object.assign(params, {message: "Callback Received"}))
 
 	const client = await getPool().connect();
 	updateWords(client, documentUUID, selectionUUID, req.body)
@@ -17,16 +17,22 @@ export async function extractionCallback(req : Request, res : Response){
 			res.statusCode = 202
 			res.send("OK!");
 		})
-		.catch((e) => handleError(e, res))
+		.catch((e : Error) => logger.error(Object.assign(params, { message: e.message, error: e })))
 		.finally(() => {
 			client.release();
 		})
 };
 
-export async function imageCallback(req : Request, res: Response) {
-	console.log('/webhook/pdf/image/:documentUUID/');
-	const documentUUID = req.params.documentUUID;
+interface imageRestResponse {
+	UUID: string,
+	images: string[]
+}
 
-	console.log("CALLBACK WORKING!");
-	console.log(req.body);
+//Take a document UUID and forward it to the processing server.
+export async function imageCallback(req: Request, res: Response) {
+	const params: any = getBaseLoggerparams(req, res);
+	logger.info(Object.assign(params, {message: "Callback Received"}))
+
+	const documentUUID = req.params.documentUUID;
+	const body = req.body as imageRestResponse;
 }
