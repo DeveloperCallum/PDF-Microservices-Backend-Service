@@ -40,6 +40,7 @@ services:
       - EUREKA_PORT=8761
     ports:
       - "0.0.0.0:3200:3200"
+      - "0.0.0.0:9229:9229"
     depends_on:
       postgres:
         condition: service_healthy

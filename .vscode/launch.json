@@ -1,0 +1,18 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node",
+      "request": "attach",
+      "name": "Attach to Docker: Node.js (TS)",
+      "port": 9229,
+      "address": "localhost",
+      "protocol": "inspector",
+      "restart": true,
+      "localRoot": "${workspaceFolder}/ExpressApp",
+      "remoteRoot": "/app",
+      "skipFiles": ["<node_internals>/**"],
+      "outFiles": ["${workspaceFolder}/ExpressApp/dist/**/*.js"]
+    }
+  ]
+}

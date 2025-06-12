@@ -21,7 +21,7 @@ const options: LoggerOptions = {
             )
         }),
         new transports.Console({
-            format: format.printf(({ message, level }) => { return `${level}: ${message}` })
+            format: format.printf(({ message, level, ...json }) => { return `${level}: ${message}` })
         })
     ],
 };
@@ -54,7 +54,7 @@ export function middleware(req: Request, res: Response, next: NextFunction) {
     res.setHeader(traceHeader, uuid); //res header is always set!
 
     const params = getBaseLoggerparams(req, res);
-    logger.debug(Object.assign(params, { message: `Incoming request to ${req.url}` }))
+    logger.info(Object.assign(params, { message: `Incoming request to ${req.url} from ${req.hostname}` }))
 
     next();
 }

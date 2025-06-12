@@ -27,7 +27,7 @@ export async function upload(req: any, res: any) {
 			return res.send(`{ "documentUUID: ${uploadUUID} }`);
 		})
 		.catch((e: any) => {
-			logger.error(e.message, Object.assign(params, { error: e }))
+			logger.error(Object.assign(params, {message: e.message, error: e }))
 			handleError(e, res)
 		})
 		.finally(() => {

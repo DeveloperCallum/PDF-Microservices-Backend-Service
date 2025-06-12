@@ -8,10 +8,9 @@ interface ImageRequest {
     documentUUID: string,
 }
 
-const callbackURL = '/webhook/pdf/image';
+const callbackURL = '/webhook/pdf/image/';
 export async function getImage(req: Request, res: Response) {
     const params: any = getBaseLoggerparams(req, res);
-    logger.info(Object.assign(params, { message: "request received from user" }))
 
     console.log(req.body)
     const imageReq = req.body as ImageRequest;
@@ -19,15 +18,45 @@ export async function getImage(req: Request, res: Response) {
     let managementURL;
     await getServiceUrl("WORKERMANAGEMENTSERVICE").then((url: any) => {
         managementURL = url;
-    }).catch((e: Error) => logger.error(Object.assign(params, { message: e.message, error: e })));
+    }).catch((e: Error) => {
+        logger.error(Object.assign(params, { message: e.message, error: e }))
 
-    req.body.callbackURL = callbackURL + `/${imageReq.documentUUID}` //Set the callbackURL.
+        if (!res.headersSent) {
+            return res.sendStatus(500).send(e.message);
+        }
+    });
+
+    req.body.callbackURL = callbackURL + `${imageReq.documentUUID}` //Set the callbackURL.
     req.body.callbackService = getServiceName(); //Set the name of this service.
 
-    logger.debug(Object.assign(params, { message: `Sending HTTP request to: ${managementURL}/management/pdf/image` }))
-    await axios.post(`${managementURL}/management/pdf/image`, req.body, { headers: req.headers }).then(() => {
-        logger.info(Object.assign(params, { message: 'Request HTTP forwarded to WORKERMANAGEMENTSERVICE'}))
-    }).catch((e: Error) => logger.error(Object.assign(params, { message: e.message, error: e })));
+    let data = JSON.stringify({
+        "documentUUID": `${imageReq.documentUUID}`,
+        "callbackURL": `/webhook/pdf/image/${imageReq.documentUUID}`,
+        "callbackService": "EXPRESSJS"
+    });
+
+    let config = {
+        method: 'post',
+        maxBodyLength: Infinity,
+        url: `${managementURL}/management/pdf/image`,
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        data: data
+    };
+
+    logger.debug(Object.assign(params, { message: `Sending HTTP request management service`, headers: req.headers, conf: config, dat: data }));
+    axios.request(config)
+        .then((response: any) => {
+            console.log(JSON.stringify(response.data));
+        })
+        .catch((e: Error) => {
+            logger.error(Object.assign(params, { message: e.message, error: e }))
+
+            if (!res.headersSent) {
+                return res.sendStatus(500).send(e.message);
+            }
+        });
 
     res.send();
 }
