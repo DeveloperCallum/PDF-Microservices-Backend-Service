@@ -2,13 +2,13 @@ import { Request, Response } from "express";
 import { getServiceUrl } from "../eukeka";
 import { getServiceName } from "../util";
 import axios from "axios";
-import logger, { BaseLoggerParams, getBaseLoggerparams, traceHeader } from "../logger";
+import logger, { getBaseLoggerparams } from "../logger";
 
 interface ImageRequest {
     documentUUID: string,
 }
 
-const callbackURL = '/webhook/pdf/image/';
+const callbackURL = '/webhook/pdf/image';
 export async function getImage(req: Request, res: Response) {
     const params: any = getBaseLoggerparams(req, res);
 
@@ -31,7 +31,7 @@ export async function getImage(req: Request, res: Response) {
 
     let data = JSON.stringify({
         "documentUUID": `${imageReq.documentUUID}`,
-        "callbackURL": `/webhook/pdf/image/${imageReq.documentUUID}`,
+        "callbackURL": `${callbackURL}/${imageReq.documentUUID}`,
         "callbackService": "EXPRESSJS"
     });
 
