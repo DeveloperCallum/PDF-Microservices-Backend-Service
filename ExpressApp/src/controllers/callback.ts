@@ -7,7 +7,7 @@ export async function extractionCallback(req: Request, res: Response) {
 	const documentUUID = req.params.documentUUID;
 	const selectionUUID = req.params.selectionUUID;
 	const params: any = getBaseLoggerparams(req, res);
-	logger.debug(Object.assign(params, {message: "Callback Received", body: req.body}))
+	logger.debug(Object.assign(params, { message: "Callback Received", body: req.body }))
 
 	const client = await getPool().connect();
 	updateWords(client, documentUUID, selectionUUID, req.body)
@@ -16,7 +16,7 @@ export async function extractionCallback(req: Request, res: Response) {
 			res.statusCode = 202
 			res.send("OK!");
 		})
-		.catch((e : Error) => logger.error(Object.assign(params, { message: e.message, error: e })))
+		.catch((e: Error) => logger.error(Object.assign(params, { message: e.message, error: e })))
 		.finally(() => {
 			client.release();
 		})
@@ -30,8 +30,14 @@ interface imageRestResponse {
 //Take a document UUID and forward it to the processing server.
 export async function imageCallback(req: Request, res: Response) {
 	const params: any = getBaseLoggerparams(req, res);
-	logger.debug(Object.assign(params, {message: "Callback Received", body: req.body}))
+	logger.debug(Object.assign(params, { message: "Callback Received", body: req.body }))
 
 	const documentUUID = req.params.documentUUID;
 	const body = req.body as imageRestResponse;
+}
+
+export async function metaCallback(req: Request, res: Response) {
+	const params: any = getBaseLoggerparams(req, res);
+	logger.debug(Object.assign(params, { message: "Callback Received", body: req.body }))
+	res.sendStatus(200);
 }

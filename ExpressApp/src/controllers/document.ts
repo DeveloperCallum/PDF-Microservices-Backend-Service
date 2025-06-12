@@ -4,7 +4,7 @@ import { getPool } from "../dbPool";
 import { getServiceName, handleError } from "../util";
 import logger, { getBaseLoggerparams } from "../logger";
 import { getServiceUrl } from "../eukrea";
-import axios from "axios";
+import axios, { AxiosResponse } from "axios";
 
 export async function getDocument(req: Request, res: Response) {
 	const documentUUID = req.params.documentUUID;
@@ -52,7 +52,7 @@ export async function getDocumentMeta(req: Request, res: Response) {
 	try {
 		logger.info(Object.assign(params, { message: "Getting workermanagement service from eukrea" }))
 		let managementURL;
-		await getServiceUrl("WORKERMANAGEMENTSERVICE").then((url: any) => managementURL = url);
+		await getServiceUrl("WORKERMANAGEMENTSERVICE").then((url: any) => { managementURL = url });
 
 		logger.info(Object.assign(params, { message: "Setting up callback" }))
 
@@ -72,18 +72,22 @@ export async function getDocumentMeta(req: Request, res: Response) {
 			data: data
 		};
 
-		logger.info(Object.assign(params, { message: "Prepared request for workermanagement service", requestMeta: JSON.stringify(config) }))
-		await axios.request(config).then(() => {
-			logger.info(Object.assign(params, { message: "sent request for workermanagement service", requestMeta: JSON.stringify(config) }))
+		logger.info(Object.assign(params, { message: "Prepared request for workermanagement service", requestMeta: config }))
+		let response: AxiosResponse<any, any> | void = await axios.request(config).then(() => {
+			logger.info(Object.assign(params, { message: "sent request for workermanagement service" }))
 		});
 
 		res.statusCode = 202;
-		return res.status(500).send("");
+		if (response) {
+			return res.status(response.status).send(response.data);
+		}
+
+		res.status(202).send("");
 	} catch (e: any) {
 		logger.error(Object.assign(params, { message: e.message, error: e }))
 
 		if (!res.headersSent) {
-			return res.status(500).send(e.message);
+			res.status(500).send(e.message);
 		}
 	}
 }

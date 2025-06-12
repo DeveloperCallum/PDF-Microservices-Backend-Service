@@ -1,19 +1,20 @@
 //index.js
-import logger, { middleware } from './logger';
-import express, { NextFunction, Request, Response } from 'express';
+import logger  from './logger';
+import express from 'express';
 import { setupPostgreSQL } from './database';
 import { configureEukera } from './eukrea';
 import { logErrors, errorHandler } from './errorhandle';
 import { upload } from './controllers/upload';
 import { extract } from './controllers/management';
 import { status } from './controllers/status';
-import { imageCallback, extractionCallback } from './controllers/callback';
+import { imageCallback, extractionCallback, metaCallback } from './controllers/callback';
 import { getDocument, getDocumentMeta, getSelection } from './controllers/document';
 import { getPool } from './dbPool';
 import { getImage } from './controllers/image';
+import { setTraceID } from './controllers/middleware';
 
 const app = express();
-app.use(middleware);
+app.use(setTraceID);
 app.use(express.json({ limit: '20mb' })); // Increase JSON body size limit
 
 app.get('/api/pdf/:documentUUID', getDocument);
@@ -24,6 +25,7 @@ app.post('/api/pdf/upload', upload);
 app.post('/api/pdf/extract', extract);
 app.post('/webhook/pdf/image/:documentUUID/', imageCallback);
 app.post('/webhook/pdf/extraction/:documentUUID/:selectionUUID', extractionCallback);
+app.post('/webhook/pdf/documentmeta/:documentUUID', metaCallback);
 app.post('/api/pdf/image', getImage);
 
 app.listen(process.env.EXPRESS_PORT, async () => {

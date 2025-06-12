@@ -49,15 +49,6 @@ export function getBaseLoggerparams(req: Request, res: Response): BaseLoggerPara
     return param;
 }
 
-export function middleware(req: Request, res: Response, next: NextFunction) {
-    const uuid = req.get(traceHeader) || v4(); //Grab the incoming traceHeader or create one.
-    res.setHeader(traceHeader, uuid); //res header is always set!
-
-    const params = getBaseLoggerparams(req, res);
-    logger.info(Object.assign(params, { message: `Incoming request to ${req.url} from ${req.hostname}` }))
-
-    next();
-}
 
 // Create the logger
 const logger = createLogger(options);
