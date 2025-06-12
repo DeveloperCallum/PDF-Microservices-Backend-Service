@@ -2,7 +2,7 @@
 import logger, { middleware } from './logger';
 import express, { NextFunction, Request, Response } from 'express';
 import { setupPostgreSQL } from './database';
-import { configureEukera } from './eukeka';
+import { configureEukera } from './eukrea';
 import { logErrors, errorHandler } from './errorhandle';
 import { upload } from './controllers/upload';
 import { extract } from './controllers/management';
@@ -15,11 +15,12 @@ import { getImage } from './controllers/image';
 const app = express();
 app.use(middleware);
 app.use(express.json({ limit: '20mb' })); // Increase JSON body size limit
+
 app.get('/api/pdf/:documentUUID', getDocument);
 app.get('/api/pdf/status/:documentUUID/:selectionUUID', status);
 app.get('/api/pdf/:documentUUID/:selectionUUID', getSelection);
-app.post('/api/pdf/upload', upload);
 app.get('/api/pdf/document/meta/:documentUUID', getDocumentMeta);
+app.post('/api/pdf/upload', upload);
 app.post('/api/pdf/extract', extract);
 app.post('/webhook/pdf/image/:documentUUID/', imageCallback);
 app.post('/webhook/pdf/extraction/:documentUUID/:selectionUUID', extractionCallback);

@@ -3,7 +3,8 @@ import { getDocumentFromDatabase, getSelectionFromUUID } from "../database";
 import { getPool } from "../dbPool";
 import { getServiceName, handleError } from "../util";
 import logger, { getBaseLoggerparams } from "../logger";
-import { getServiceUrl } from "../eukeka";
+import { getServiceUrl } from "../eukrea";
+import axios from "axios";
 
 export async function getDocument(req: Request, res: Response) {
 	const documentUUID = req.params.documentUUID;
@@ -44,36 +45,45 @@ export async function getSelection(req: Request, res: Response) {
 export async function getDocumentMeta(req: Request, res: Response) {
 	const params: any = getBaseLoggerparams(req, res);
 	const documentUUID = req.params.documentUUID;
+	logger.info(Object.assign(params, { message: "Getting document meta" }))
 
-	let managementURL;
-	await getServiceUrl("WORKERMANAGEMENTSERVICE").then((url: any) => {
-		managementURL = url;
-	}).catch((e: Error) => {
+	//TODO: Check database!
+
+	try {
+		logger.info(Object.assign(params, { message: "Getting workermanagement service from eukrea" }))
+		let managementURL;
+		await getServiceUrl("WORKERMANAGEMENTSERVICE").then((url: any) => managementURL = url);
+
+		logger.info(Object.assign(params, { message: "Setting up callback" }))
+
+		let data = JSON.stringify({
+			"documentUUID": `${documentUUID}`,
+			"callbackURL": `${callbackURL}/${documentUUID}`,
+			"callbackService": "EXPRESSJS"
+		});
+
+		let config = {
+			method: 'post',
+			maxBodyLength: Infinity,
+			url: `${managementURL}/management/pdf/meta`,
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			data: data
+		};
+
+		logger.info(Object.assign(params, { message: "Prepared request for workermanagement service", requestMeta: JSON.stringify(config) }))
+		await axios.request(config).then(() => {
+			logger.info(Object.assign(params, { message: "sent request for workermanagement service", requestMeta: JSON.stringify(config) }))
+		});
+
+		res.statusCode = 202;
+		return res.status(500).send("");
+	} catch (e: any) {
 		logger.error(Object.assign(params, { message: e.message, error: e }))
 
 		if (!res.headersSent) {
-			return res.sendStatus(500).send(e.message);
+			return res.status(500).send(e.message);
 		}
-	});
-
-	req.body.callbackURL = callbackURL + `${documentUUID}` //Set the callbackURL.
-	req.body.callbackService = getServiceName(); //Set the name of this service.
-
-
-    let data = JSON.stringify({
-        "documentUUID": `${documentUUID}`,
-        "callbackURL": `${callbackURL}/${documentUUID}`,
-        "callbackService": "EXPRESSJS"
-    });
-
-    let config = {
-        method: 'post',
-        maxBodyLength: Infinity,
-        url: `${managementURL}/management/pdf/meta`,
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        data: data
-    };
-
+	}
 }

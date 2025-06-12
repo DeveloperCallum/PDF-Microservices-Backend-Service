@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { getServiceUrl } from "../eukeka";
+import { getServiceUrl } from "../eukrea";
 import { getServiceName } from "../util";
 import axios from "axios";
 import logger, { getBaseLoggerparams } from "../logger";
@@ -22,7 +22,7 @@ export async function getImage(req: Request, res: Response) {
         logger.error(Object.assign(params, { message: e.message, error: e }))
 
         if (!res.headersSent) {
-            return res.sendStatus(500).send(e.message);
+            return res.status(500).send(e.message);
         }
     });
 
@@ -53,9 +53,10 @@ export async function getImage(req: Request, res: Response) {
         .catch((e: Error) => {
             logger.error(Object.assign(params, { message: e.message, error: e }))
 
-            if (!res.headersSent) {
-                return res.sendStatus(500).send(e.message);
-            }
+		if (!res.headersSent) {
+			res.statusCode = 500;
+            return res.status(500).send(e.message);
+		}
         });
 
     res.send();

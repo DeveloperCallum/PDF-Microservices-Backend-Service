@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { addSelectionTotable } from "../database";
 import { getPool } from "../dbPool";
-import { getServiceUrl } from "../eukeka";
+import { getServiceUrl } from "../eukrea";
 import { getServiceName } from "../util";
 import axios from "axios";
 import { v4 } from "uuid";
