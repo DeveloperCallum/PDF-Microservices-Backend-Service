@@ -27,6 +27,7 @@ services:
     networks:
       - backend-network
       - pdf_microservice_arch
+      - backend-logging-connector
     environment:
       - POSTGRES_USERNAME=user
       - POSTGRES_PASSWORD=password
@@ -39,6 +40,7 @@ services:
       - EUREKA_PORT=8761
     ports:
       - "0.0.0.0:3200:3200"
+      - "0.0.0.0:9229:9229"
     depends_on:
       postgres:
         condition: service_healthy
@@ -47,7 +49,9 @@ volumes:
     driver: local
 
 networks:
-  pdf_microservice_arch:
-    external: true
   backend-network:
     external: false
+  pdf_microservice_arch:
+    external: true
+  backend-logging-connector:
+    external: true

@@ -59,7 +59,6 @@ export function getServiceUrl(serviceName : any) {
                 return reject(new Error('No instances available'));
             }
 
-            console.log(instances.length)
             const instance = instances[Math.ceil(Math.random() * instances.length) - 1];
             const serviceUrl = `http://${instance.hostName}:${instance.port.$}`;
             resolve(serviceUrl);

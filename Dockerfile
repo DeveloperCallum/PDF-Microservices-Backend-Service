@@ -20,4 +20,4 @@ RUN npx tsc
 EXPOSE 3000
 
 # Start the app from compiled JS
-CMD ["node", "dist/index.js"]
+CMD ["node", "--inspect=0.0.0.0:9229", "dist/index.js"]

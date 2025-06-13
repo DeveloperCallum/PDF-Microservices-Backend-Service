@@ -1,14 +1,13 @@
 import { Request, Response } from "express";
-import { updateWords, updateIsComplete } from "../database";
+import { updateWords, updateIsComplete, DocumentMeta, setDocumentMetaFromDatabase } from "../database";
 import { getPool } from "../dbPool";
-import { handleError } from "../util";
+import logger, { getBaseLoggerparams } from "../logger";
 
-export async function extractionCallback(req : Request, res : Response){
-	console.log('/webhook/pdf/extraction/:documentUUID/:selectionUUID');
+export async function extractionCallback(req: Request, res: Response) {
 	const documentUUID = req.params.documentUUID;
 	const selectionUUID = req.params.selectionUUID;
-
-	console.log("CALLBACK WORKING!");
+	const params: any = getBaseLoggerparams(req, res);
+	logger.info(Object.assign(params, { message: "Callback Received", body: req.body }))
 
 	const client = await getPool().connect();
 	updateWords(client, documentUUID, selectionUUID, req.body)
@@ -17,16 +16,37 @@ export async function extractionCallback(req : Request, res : Response){
 			res.statusCode = 202
 			res.send("OK!");
 		})
-		.catch((e) => handleError(e, res))
+		.catch((e: Error) => logger.error(Object.assign(params, { message: e.message, error: e })))
 		.finally(() => {
 			client.release();
 		})
 };
 
-export async function imageCallback(req : Request, res: Response) {
-	console.log('/webhook/pdf/image/:documentUUID/');
-	const documentUUID = req.params.documentUUID;
+interface ImageRestResponse {
+	UUID: string,
+	images: string[]
+}
 
-	console.log("CALLBACK WORKING!");
-	console.log(req.body);
+//Take a document UUID and forward it to the processing server.
+export async function imageCallback(req: Request, res: Response) {
+	const params: any = getBaseLoggerparams(req, res);
+	logger.debug(Object.assign(params, { message: "Callback Received", body: req.body }))
+
+	const documentUUID = req.params.documentUUID;
+	const body = req.body as ImageRestResponse; // will not work,
+}
+
+export async function metaCallback(req: Request, res: Response) {
+	const params: any = getBaseLoggerparams(req, res);
+	logger.info(Object.assign(params, { message: "Callback Received", body: req.body }))
+
+	//Update the database.
+	const client = await getPool().connect();
+	const responseData : DocumentMeta = req.body;
+
+	await setDocumentMetaFromDatabase(client, responseData.documentUUID, responseData.imageMeta).then(() => {
+		logger.info(Object.assign(params, { message: "Saved document meta" }))
+	})
+
+	res.sendStatus(200);
 }
