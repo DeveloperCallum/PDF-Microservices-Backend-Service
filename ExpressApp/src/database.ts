@@ -137,7 +137,7 @@ export interface ImageMeta {
 
 export interface DocumentMeta {
     documentUUID: string;
-    imageMeta?: ImageMeta;
+    imageMeta: ImageMeta;
     images?: any;
 }
 
@@ -150,18 +150,12 @@ export async function getDocumentMetaFromDatabase(client: PoolClient, documentUU
         return undefined;
     }
 
-    let height = res.rows[0]?.height;
-    let width = res.rows[0]?.width;
-    let numberOfPages = res.rows[0]?.numberOfPages;
+    let imageMeta : ImageMeta = res.rows[0]?.imageMeta;
     let images = res.rows[0]?.images;
 
     let meta: DocumentMeta = {
         documentUUID: documentUUID,
-        imageMeta: {
-            height: height,
-            width: width,
-            numberOfPages: numberOfPages,
-        },
+        imageMeta: imageMeta,
         images: images,
     }
 
