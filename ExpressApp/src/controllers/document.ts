@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { getDocumentFromDatabase, getSelectionFromUUID } from "../database";
+import { getDocumentFromDatabase, getDocumentMetaFromDatabase, getSelectionFromUUID } from "../database";
 import { getPool } from "../dbPool";
 import { getServiceName, handleError } from "../util";
 import logger, { getBaseLoggerparams } from "../logger";
@@ -51,7 +51,7 @@ export async function getDocumentMeta(req: Request, res: Response) {
 
 	logger.info(Object.assign(params, { message: "Checking database for document meta", documentUUID: documentUUID }))
 	//TODO: Check database!
-	let databaseMeta = await getDocumentFromDatabase(client, documentUUID);
+	let databaseMeta = await getDocumentMetaFromDatabase(client, documentUUID);
 
 	if (databaseMeta) {
 		logger.info(Object.assign(params, { message: "returned found meta", documentUUID: documentUUID }));
@@ -104,4 +104,4 @@ export async function getDocumentMeta(req: Request, res: Response) {
 			res.status(500).send(e.message);
 		}
 	}
-}
+}	
