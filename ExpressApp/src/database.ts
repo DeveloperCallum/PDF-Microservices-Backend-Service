@@ -1,6 +1,5 @@
 import fs from 'fs';
 import { Pool, PoolClient, QueryResult } from 'pg';
-import { ImageData as ImageMetaData } from './controllers/callback';
 
 export function setupPostgreSQL(client: any, database: any) {
     console.log('Connected to PostgreSQL database');
@@ -132,7 +131,7 @@ export async function setDocumentMetaFromDatabase(client: PoolClient, documentUU
 
 export interface documentMeta {
     documentUUID: string;
-    imageMeta?: ImageMetaData;
+    imageMeta?: {height: number, width: number, numberOfPages: number};
     images?: any;
 }
 
