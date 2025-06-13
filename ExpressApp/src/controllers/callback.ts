@@ -43,7 +43,8 @@ export async function metaCallback(req: Request, res: Response) {
 	//Update the database.
 	const client = await getPool().connect();
 	const responseData : DocumentMeta = req.body;
-	await setDocumentMetaFromDatabase(client, responseData.documentUUID, responseData.images).then(() => {
+
+	await setDocumentMetaFromDatabase(client, responseData.documentUUID, responseData.imageMeta).then(() => {
 		logger.info(Object.assign(params, { message: "Saved document meta" }))
 	})
 

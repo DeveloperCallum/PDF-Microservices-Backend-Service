@@ -123,12 +123,6 @@ export function getisCompletedSelectionFromUUID(client: any, docUUID: any, selUU
     })
 }
 
-export async function setDocumentMetaFromDatabase(client: PoolClient, documentUUID: string, imageMeta: ImageMeta): Promise<QueryResult<any>> {
-    const updateTable = 'insert into documentmeta_table ("Document_UUID", "Height", "Width", "Number_Of_Pages") values ($1, $2, $3, $4)';
-
-    return await client.query(updateTable, [documentUUID, imageMeta.height, imageMeta.width, imageMeta.numberOfPages]);
-}
-
 export interface ImageMeta {
     height: number;
     width: number;
@@ -141,6 +135,12 @@ export interface DocumentMeta {
     images?: any;
 }
 
+export async function setDocumentMetaFromDatabase(client: PoolClient, documentUUID: string, imageMeta: ImageMeta): Promise<QueryResult<any>> {
+    const updateTable = 'insert into documentmeta_table ("Document_UUID", "Height", "Width", "Number_Of_Pages") values ($1, $2, $3, $4)';
+
+    return await client.query(updateTable, [documentUUID, imageMeta.height, imageMeta.width, imageMeta.numberOfPages]);
+}
+
 export async function getDocumentMetaFromDatabase(client: PoolClient, documentUUID: string): Promise<DocumentMeta | undefined> {
     const updateTable = 'select "Document_UUID" as "documentUUID", "Height" as "height", "Width" as "width", "Number_Of_Pages" as "numberOfPages", "Images" as "images" from documentmeta_table where "Document_UUID" = $1';
 
@@ -150,7 +150,15 @@ export async function getDocumentMetaFromDatabase(client: PoolClient, documentUU
         return undefined;
     }
 
-    let imageMeta : ImageMeta = res.rows[0]?.imageMeta;
+    console.log(res.rows);
+    console.log(res.rowCount);
+
+    let imageMeta : ImageMeta = {
+        height: res.rows[0].height,
+        width: res.rows[0].width,
+        numberOfPages: res.rows[0].numberOfPages,
+    }
+
     let images = res.rows[0]?.images;
 
     let meta: DocumentMeta = {
