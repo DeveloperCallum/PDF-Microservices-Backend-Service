@@ -6,7 +6,7 @@ import logger, { getBaseLoggerparams } from "../logger";
 import { getServiceUrl } from "../eukrea";
 import axios, { AxiosResponse } from "axios";
 
-export async function getDocument(req: Request, res: Response) {
+export async function getDocument(req: Request, res: Response): Promise<void> {
 	const documentUUID = req.params.documentUUID;
 	const client = await getPool().connect();
 
@@ -43,11 +43,23 @@ export async function getSelection(req: Request, res: Response) {
 };
 
 export async function getDocumentMeta(req: Request, res: Response) {
+	const client = await getPool().connect();
 	const params: any = getBaseLoggerparams(req, res);
 	const documentUUID = req.params.documentUUID;
 	logger.info(Object.assign(params, { message: "Getting document meta" }))
 
+
+	logger.info(Object.assign(params, { message: "Checking database for document meta", documentUUID: documentUUID }))
 	//TODO: Check database!
+	let databaseMeta = await getDocumentFromDatabase(client, documentUUID);
+
+	if (databaseMeta) {
+		logger.info(Object.assign(params, { message: "returned found meta", documentUUID: documentUUID }));
+		res.status(200).send(databaseMeta);
+		return;
+	}
+
+	logger.info(Object.assign(params, { message: "queue meta retrevial", documentUUID: documentUUID }));
 
 	try {
 		logger.info(Object.assign(params, { message: "Getting workermanagement service from eukrea" }))
@@ -79,9 +91,11 @@ export async function getDocumentMeta(req: Request, res: Response) {
 
 		res.statusCode = 202;
 		if (response) {
-			return res.status(response.status).send(response.data);
+			res.status(response.status).send(response.data);
+			return;
 		}
 
+		//Let the client know that the request has been queued and that it needs to check back later!
 		res.status(202).send("");
 	} catch (e: any) {
 		logger.error(Object.assign(params, { message: e.message, error: e }))

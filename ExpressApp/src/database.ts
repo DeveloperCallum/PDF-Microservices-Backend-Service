@@ -1,4 +1,6 @@
 import fs from 'fs';
+import { Pool, PoolClient, QueryResult } from 'pg';
+import { ImageData as ImageMetaData } from './controllers/callback';
 
 export function setupPostgreSQL(client: any, database: any) {
     console.log('Connected to PostgreSQL database');
@@ -120,4 +122,43 @@ export function getisCompletedSelectionFromUUID(client: any, docUUID: any, selUU
             })
             .catch(reject);
     })
+}
+
+export async function setDocumentMetaFromDatabase(client: PoolClient, documentUUID: string, imageMeta: ImageMetaData): Promise<QueryResult<any>> {
+    const updateTable = 'insert into documentmeta_table ("Document_UUID", "Height", "Width", "Number_Of_Pages") values ($1, $2, $3, $4)';
+
+    return await client.query(updateTable, [documentUUID, imageMeta.height, imageMeta.width, imageMeta.numberOfPages]);
+}
+
+export interface documentMeta {
+    documentUUID: string;
+    imageMeta?: ImageMetaData;
+    images?: any;
+}
+
+export async function getDocumentMetaFromDatabase(client: PoolClient, documentUUID: string): Promise<documentMeta | undefined> {
+    const updateTable = 'select "Document_UUID" as "documentUUID", "Height" as "height", "Width" as "width", "Number_Of_Pages" as "numberOfPages", "Images" as "images" from documentmeta_table where "Document_UUID" = $1';
+
+    const res = await client.query(updateTable, [documentUUID]);
+
+    if (res.rows.length == 0) {
+        return undefined;
+    }
+
+    let height = res.rows[0]?.height;
+    let width = res.rows[0]?.width;
+    let numberOfPages = res.rows[0]?.numberOfPages;
+    let images = res.rows[0]?.images;
+
+    let meta : documentMeta = {
+        documentUUID: documentUUID,
+        imageMeta: {
+            height: height,
+            width: width,
+            numberOfPages: numberOfPages,
+        },
+        images: images,
+    }
+
+    return meta;
 }
