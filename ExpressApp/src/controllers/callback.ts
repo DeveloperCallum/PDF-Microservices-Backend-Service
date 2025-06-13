@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { updateWords, updateIsComplete, setDocumentMeta, documentMeta, setDocumentMetaFromDatabase } from "../database";
+import { updateWords, updateIsComplete, documentMeta, setDocumentMetaFromDatabase } from "../database";
 import { getPool } from "../dbPool";
 import logger, { getBaseLoggerparams } from "../logger";
 
