@@ -123,15 +123,21 @@ export function getisCompletedSelectionFromUUID(client: any, docUUID: any, selUU
     })
 }
 
-export async function setDocumentMetaFromDatabase(client: PoolClient, documentUUID: string, imageMeta: ImageMetaData): Promise<QueryResult<any>> {
+export async function setDocumentMetaFromDatabase(client: PoolClient, documentUUID: string, imageMeta: imageMeta): Promise<QueryResult<any>> {
     const updateTable = 'insert into documentmeta_table ("Document_UUID", "Height", "Width", "Number_Of_Pages") values ($1, $2, $3, $4)';
 
     return await client.query(updateTable, [documentUUID, imageMeta.height, imageMeta.width, imageMeta.numberOfPages]);
 }
 
+export interface imageMeta {
+    height: number;
+    width: number;
+    numberOfPages: number;
+}
+
 export interface documentMeta {
     documentUUID: string;
-    imageMeta?: {height: number, width: number, numberOfPages: number};
+    imageMeta?: imageMeta;
     images?: any;
 }
 
@@ -149,7 +155,7 @@ export async function getDocumentMetaFromDatabase(client: PoolClient, documentUU
     let numberOfPages = res.rows[0]?.numberOfPages;
     let images = res.rows[0]?.images;
 
-    let meta : documentMeta = {
+    let meta: documentMeta = {
         documentUUID: documentUUID,
         imageMeta: {
             height: height,
