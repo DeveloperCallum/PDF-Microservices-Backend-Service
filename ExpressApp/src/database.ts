@@ -150,10 +150,7 @@ export async function getDocumentMetaFromDatabase(client: PoolClient, documentUU
         return undefined;
     }
 
-    console.log(res.rows);
-    console.log(res.rowCount);
-
-    let imageMeta : ImageMeta = {
+    let imageMeta: ImageMeta = {
         height: res.rows[0].height,
         width: res.rows[0].width,
         numberOfPages: res.rows[0].numberOfPages,
@@ -168,4 +165,19 @@ export async function getDocumentMetaFromDatabase(client: PoolClient, documentUU
     }
 
     return meta;
+}
+
+export function setImageJsonFromDocumentMetaFromDatabase(client: PoolClient, imageJson: any, documentUUID: string): void {
+    const sql = 'update documentmeta_table set "Images" = $1 where "Document_UUID" = $2';
+    client.query(sql, [JSON.stringify(imageJson), documentUUID])
+}
+
+export async function getImageJsonFromDocumentMetaFromDatabase(client: PoolClient, documentUUID: string): Promise<any | undefined> {
+    const sql = 'select "Document_UUID", "Images" from documentmeta_table where "Document_UUID" = $1 and "Images" is not null'
+    const res = await client.query(sql, [documentUUID]);
+    if (res.rows.length == 0) {
+        return undefined;
+    }
+
+    return res.rows[0];
 }
