@@ -16,7 +16,6 @@ import { setTraceID } from './controllers/middleware';
 const app = express();
 app.use(setTraceID);
 app.use(express.json({ limit: '20mb' })); // Increase JSON body size limit
-
 app.get('/api/pdf/:documentUUID', getDocument);
 app.get('/api/pdf/status/:documentUUID/:selectionUUID', status);
 app.get('/api/pdf/:documentUUID/:selectionUUID', getSelection);
